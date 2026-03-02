@@ -1,0 +1,67 @@
+[
+  {
+    "orderId": "1772368688414",
+    "userId": "1772368571457",
+    "customerName": "Ishant",
+    "items": [
+      {
+        "id": "f2",
+        "cat": "footwear",
+        "name": "Leather Derby Formals",
+        "price": 1899,
+        "old": 2499,
+        "rating": 4.7,
+        "reviews": 54,
+        "img": "https://images.unsplash.com/photo-1533867617858-e7b97e060509?w=500&q=80",
+        "badge": "Premium",
+        "brand": "CraftLeather",
+        "desc": "Full-grain leather derby shoes. Handcrafted with Goodyear welt construction.",
+        "inStock": true,
+        "qty": 1
+      },
+      {
+        "id": "f3",
+        "cat": "footwear",
+        "name": "Canvas Slip-On Sneakers",
+        "price": 799,
+        "old": 1099,
+        "rating": 4.4,
+        "reviews": 201,
+        "img": "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=500&q=80",
+        "badge": "Casual",
+        "brand": "UrbanWalk",
+        "desc": "Vegan canvas sneakers with elastic side panels for easy slip-on comfort.",
+        "inStock": true,
+        "qty": 1
+      }
+    ],
+    "totalAmount": 2698,
+    "orderDate": "2026-03-01T12:38:08.414Z",
+    "status": "Processing"
+  },
+  {
+    "orderId": "1772370655743",
+    "userId": "1772368571457",
+    "customerName": "Ishant",
+    "items": [
+      {
+        "id": "h2",
+        "cat": "home",
+        "name": "Scented Soy Wax Candles",
+        "price": 599,
+        "old": 799,
+        "rating": 4.9,
+        "reviews": 312,
+        "img": "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=500&q=80",
+        "badge": "Aromatherapy",
+        "brand": "CalmCraft",
+        "desc": "Hand-poured soy wax with cotton wick. Long 55hr burn. Lavender & sandalwood.",
+        "inStock": true,
+        "qty": 1
+      }
+    ],
+    "totalAmount": 599,
+    "orderDate": "2026-03-01T13:10:55.743Z",
+    "status": "Processing"
+  }
+]
