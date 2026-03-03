@@ -22,13 +22,17 @@ exports.createOrder = (req, res) => {
 
         const orders = readData(ordersFilePath);
 
+        const date = new Date();
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istDate = new Date(date.getTime() + istOffset);
+
         const newOrder = {
             orderId: Date.now().toString(),
             userId: user.id,
             customerName: user.name, // Storing customer name as requested
             items: items, // Array of items ordered
             totalAmount: totalAmount || 0,
-            orderDate: new Date().toISOString(),
+            orderDate: istDate.toISOString(),
             status: "Processing"
         };
 

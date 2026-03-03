@@ -2,5 +2,38 @@
   {
     "userId": "123",
     "items": []
+  },
+  {
+    "userId": "1772430828698",
+    "items": [
+      {
+        "id": "g1",
+        "cat": "groceries",
+        "name": "Organic Dhaga Mishri",
+        "price": 349,
+        "old": 499,
+        "rating": 4.9,
+        "reviews": 71,
+        "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+        "badge": "Organic",
+        "brand": "Nature's Best",
+        "desc": "Pure crystal sugar, hand-spun on strings. Perfect for prasad and everyday use. No additives, no chemicals.",
+        "inStock": true
+      },
+      {
+        "id": "g2",
+        "cat": "groceries",
+        "name": "Cold-Pressed Sesame Oil",
+        "price": 499,
+        "old": 699,
+        "rating": 4.8,
+        "reviews": 115,
+        "img": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500&q=80",
+        "badge": "Best Seller",
+        "brand": "KachiGhaani",
+        "desc": "Wooden cold-pressed for maximum nutrition. Rich in antioxidants and healthy fats. Zero chemicals.",
+        "inStock": true
+      }
+    ]
   }
 ]
