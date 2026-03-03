@@ -20,7 +20,7 @@ ecart/
 │       └── components/            # Reusable UI (Navbar, ProductCard)
 │
 └── backend/                      # Node.js + Express API
-    ├── server.js                 # API Entry Point (Port 5001)
+    ├── server.js                 # API Entry Point (Port 3000)
     ├── package.json
     ├── data/
     │   ├── login.json            # Persistent User Accounts database
@@ -36,44 +36,36 @@ ecart/
 
 ## ✅ Features
 
-### 💻 Backend Functions
-- **File System Database** — No MongoDB required! Stores all records directly inside local `data/*.json` files for easy debugging, college assignments, and local testing.
-- **REST APIs** — Robust routing for processing orders, registering users, and retrieving wishlist items.
-- **Data Persistence** — Logs out and logs back in? The AppContext automatically reaches into the Node servers and downloads your personal cart/wishlist histories flawlessly.
+### 💻 Backend API Documentation
+This project uses a custom Node.js and Express REST API. Instead of a database like MongoDB or SQL, the backend uses Node's native `fs` module to securely perform **CRUD (Create, Read, Update, Delete)** operations directly on local JSON files (`login.json`, `orders.json`, `wishlist.json`). This ensures full data persistence perfectly suited for standalone applications.
 
-### 🏠 Frontend Pages
-- **Home** — Announcement bar, hero, 6-category grid, trending products, feature badges
-- **Category Pages** — Groceries, Footwear, Clothes, Electronics, Beauty, Home (Live filtering/sorting)
-- **Product Detail** — Image, description tabs, qty selector, heart icon mapped to the API
-- **Login/Signup** — Email/password with validation, dynamic password strength energy meter!
-- **Cart** — Checkout with strict 6-digit PIN validation, coupon codes, and API order processing.
-- **My Orders** — Track past purchases. Automatically updates flag to "Delivered" exactly 3 days after ordering.
+#### 1. Authentication API (`/api/auth`)
+- **`POST /api/auth/signup`**
+  - **Function**: Creates a new user account.
+  - **Body Payload**: `{ name, email, password }`
+  - **Logic**: Reads `login.json`, verifies the email is unique, generates a `Date.now()` unique user ID, and saves the new profile.
+- **`POST /api/auth/login`**
+  - **Function**: Authenticates an existing user.
+  - **Body Payload**: `{ email, password }`
+  - **Logic**: Scans `login.json` for a matching email and password. Returns the user object (sans password) back to the React Context.
 
----
+#### 2. Checkout & Orders API (`/api/orders`)
+- **`POST /api/orders`**
+  - **Function**: Processes a new cart checkout and saves the order history.
+  - **Body Payload**: `{ userId, items, totalAmount }`
+  - **Logic**: Validates the `userId` exists, calculates the exact Indian Standard Time (IST) offset using JS Date methods, and stores the full order structure into `orders.json`.
+- **`GET /api/orders/:userId`**
+  - **Function**: Retrieves a user's entire order history.
+  - **Parameters**: `userId` (passed via the URL).
+  - **Logic**: Filters out all matching past orders and sends an array back to the React `OrdersPage` component.
 
-## 🚀 Setup & Execution
-
-To run the full stack application, you need to start **both** the backend and the frontend servers in separate terminal windows.
-
-### 1. Start the Node.js Backend
-
-Open your first terminal and navigate to the backend folder:
-```bash
-cd ecart/backend
-npm install
-npm run dev
-```
-*(The API will successfully spin up on `http://localhost:5001` and await requests).*
-
-### 2. Start the React Frontend
-
-Open a new, second terminal window and navigate to the frontend folder:
-```bash
-cd ecart/frontend
-npm install
-npm run dev
-```
-*(The website will spin up on `http://localhost:5175`. Open this in your browser!).*
+#### 3. Favorites / Wishlist API (`/api/wishlist`)
+- **`POST /api/wishlist/toggle`**
+  - **Function**: A dynamic smart-endpoint that handles both **Update** and **Delete** operations simultaneously.
+  - **Body Payload**: `{ userId, product }`
+  - **Logic**: Checks `wishlist.json`. If the user has already favorited the item, it splices (deletes) it from the array. If the item is new, it pushes (creates) it.
+- **`GET /api/wishlist/:userId`**
+  - **Function**: Fetches the user's permanent favorites list from the server to immediately restore the red-heart UI states upon logging in.
 
 ---
 
@@ -93,4 +85,4 @@ npm run dev
 
 ---
 
-Built with ❤️ using React, Vite, Node.js, and Express
+Built with ❤️ by Ishant using React, Vite, Node.js, and Express

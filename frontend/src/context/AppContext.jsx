@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AppContext = createContext(null);
-export const API_URL = "http://localhost:5001/api";
+export const API_URL = "http://localhost:3000/api";
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ecart_user')) || null);
