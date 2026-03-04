@@ -5,7 +5,7 @@ export default function OrdersPage({ navigate }) {
 
     const getOrderStatus = (orderDate) => {
         const hoursElapsed = (new Date() - new Date(orderDate)) / (1000 * 60 * 60);
-        if (hoursElapsed > 72) return { text: 'Delivered', color: 'var(--ok)' };
+        if (hoursElapsed > 48) return { text: 'Delivered', color: 'var(--ok)' };
         if (hoursElapsed > 24) return { text: 'In Transit', color: 'var(--saffron)' };
         return { text: 'Processing', color: '#6366f1' }; // Indigo
     };
@@ -40,7 +40,7 @@ export default function OrdersPage({ navigate }) {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, borderBottom: '1px solid var(--gl)', paddingBottom: 16, marginBottom: 16 }}>
                                     <div>
                                         <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ch)', marginBottom: 4 }}>{ord.id}</div>
-                                        <div style={{ fontSize: 13, color: 'var(--gm)' }}>{new Date(ord.date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {ord.items.length} items</div>
+                                        <div style={{ fontSize: 13, color: 'var(--gm)' }}>{new Date(ord.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {ord.items.length} items</div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                         <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--ch)' }}>₹{ord.total.toLocaleString()}</div>

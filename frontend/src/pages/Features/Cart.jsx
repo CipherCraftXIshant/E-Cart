@@ -36,10 +36,6 @@ export default function Cart({ navigate }) {
         showToast('Please fill all shipping details', '⚠️');
         return;
       }
-      if (!/^\d{6}$/.test(shipping.pin)) {
-        showToast('PIN code must be exactly 6 digits', '⚠️');
-        return;
-      }
       setStep(3);
     } else if (step === 3) {
       placeOrder(cart, total, shipping, payment);
@@ -134,7 +130,7 @@ export default function Cart({ navigate }) {
                   <textarea className="inp" placeholder="Street Address / Apartment / Suite" rows="3" style={{ resize: 'vertical' }} value={shipping.address} onChange={e => setShipping({ ...shipping, address: e.target.value })} />
                   <div style={{ display: 'flex', gap: 16 }}>
                     <input className="inp" placeholder="City" style={{ flex: 1 }} value={shipping.city} onChange={e => setShipping({ ...shipping, city: e.target.value })} />
-                    <input className="inp" placeholder="PIN Code" maxLength="6" style={{ width: 140 }} value={shipping.pin} onChange={e => setShipping({ ...shipping, pin: e.target.value.replace(/\D/g, '') })} />
+                    <input className="inp" placeholder="PIN Code" style={{ width: 140 }} value={shipping.pin} onChange={e => setShipping({ ...shipping, pin: e.target.value })} />
                   </div>
                 </div>
               </div>

@@ -143,16 +143,15 @@ export default function Signup({ navigate }) {
             </Field>
           </div>
 
-          {/* Password Strength Indicator */}
+          {/* Strength indicator */}
           {form.password && (
             <div style={{ marginTop: -12, marginBottom: 16 }}>
-              <div style={{ display: 'flex', gap: 4, height: 6, borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ flex: 1, background: form.password.length > 0 ? (form.password.length < 5 ? '#ef4444' : form.password.length < 8 ? '#eab308' : '#22c55e') : '#f3f4f6', transition: '0.3s' }} />
-                <div style={{ flex: 1, background: form.password.length > 4 ? (form.password.length < 8 ? '#eab308' : '#22c55e') : '#f3f4f6', transition: '0.3s' }} />
-                <div style={{ flex: 1, background: form.password.length > 7 ? '#22c55e' : '#f3f4f6', transition: '0.3s' }} />
-              </div>
-              <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, textAlign: 'right', color: form.password.length < 5 ? '#ef4444' : form.password.length < 8 ? '#eab308' : '#22c55e' }}>
-                {form.password.length < 5 ? 'Weak' : form.password.length < 8 ? 'Fair' : 'Strong'}
+              <div style={{ display: 'flex', gap: 4 }}>
+                {['Weak', 'Fair', 'Good', 'Strong'].map((lbl, i) => {
+                  const str = form.password.length < 6 ? 0 : form.password.length < 8 ? 1 : /[A-Z]/.test(form.password) && /[0-9]/.test(form.password) ? 3 : 2;
+                  const colors = ['#ef4444', '#f59e0b', '#22c55e', '#16a34a'];
+                  return <div key={i} style={{ flex: 1, height: 3, borderRadius: 2, background: i <= str ? colors[str] : 'var(--gray-light)', transition: 'background 0.3s' }} />;
+                })}
               </div>
             </div>
           )}

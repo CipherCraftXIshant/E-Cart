@@ -103,19 +103,6 @@ export default function Login({ navigate }) {
                 background: 'none', border: 'none', cursor: 'pointer', fontSize: 16,
               }}>{showPass ? '🙈' : '👁️'}</button>
             </div>
-            {/* Password Strength Indicator */}
-            {form.password.length > 0 && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ display: 'flex', gap: 4, height: 6, borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ flex: 1, background: form.password.length > 0 ? (form.password.length < 5 ? '#ef4444' : form.password.length < 8 ? '#eab308' : '#22c55e') : '#f3f4f6', transition: '0.3s' }} />
-                  <div style={{ flex: 1, background: form.password.length > 4 ? (form.password.length < 8 ? '#eab308' : '#22c55e') : '#f3f4f6', transition: '0.3s' }} />
-                  <div style={{ flex: 1, background: form.password.length > 7 ? '#22c55e' : '#f3f4f6', transition: '0.3s' }} />
-                </div>
-                <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, textAlign: 'right', color: form.password.length < 5 ? '#ef4444' : form.password.length < 8 ? '#eab308' : '#22c55e' }}>
-                  {form.password.length < 5 ? 'Weak' : form.password.length < 8 ? 'Fair' : 'Strong'}
-                </div>
-              </div>
-            )}
           </Field>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24, marginTop: -8 }}>
