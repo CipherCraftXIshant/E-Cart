@@ -1,5 +1,8 @@
 const { readData, writeData } = require('../utils/file.util');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development_purposes';
 
 const usersFilePath = path.join(__dirname, '../../data/login.json');
 
@@ -32,7 +35,15 @@ exports.signup = (req, res) => {
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = newUser;
-        res.status(201).json({ message: "Signup successful", user: userWithoutPassword });
+
+        // Generate JWT
+        const token = jwt.sign(
+            { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({ message: "Signup successful", user: userWithoutPassword, token });
 
     } catch (error) {
         console.error("Signup error:", error);
@@ -57,7 +68,15 @@ exports.login = (req, res) => {
         }
 
         const { password: _, ...userWithoutPassword } = user;
-        res.status(200).json({ message: "Login successful", user: userWithoutPassword });
+
+        // Generate JWT
+        const token = jwt.sign(
+            { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({ message: "Login successful", user: userWithoutPassword, token });
 
     } catch (error) {
         console.error("Login error:", error);

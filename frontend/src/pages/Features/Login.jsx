@@ -38,20 +38,12 @@ export default function Login({ navigate }) {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        login(data.user, data.token);
+        navigate('/');
+      } else {
         setErrors({ email: data.message || 'Login failed' });
-        setLoading(false);
-        return;
       }
-
-      login({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        avatar: data.user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-      });
-
-      navigate('/');
 
     } catch (error) {
       console.error("Login error:", error);

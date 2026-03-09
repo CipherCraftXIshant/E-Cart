@@ -5,6 +5,7 @@ export const API_URL = "http://localhost:3000/api";
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ecart_user')) || null);
+  const [token, setToken] = useState(() => localStorage.getItem('ecart_token') || null);
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('ecart_cart')) || []);
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('ecart_wishlist')) || []);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('ecart_orders')) || []);
@@ -13,6 +14,11 @@ export function AppProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('ecart_user', JSON.stringify(user));
   }, [user]);
+
+  useEffect(() => {
+    if (token) localStorage.setItem('ecart_token', token);
+    else localStorage.removeItem('ecart_token');
+  }, [token]);
 
   useEffect(() => {
     localStorage.setItem('ecart_cart', JSON.stringify(cart));
@@ -29,15 +35,19 @@ export function AppProvider({ children }) {
   // Fetch true orders and wishlist on mount or user login
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user) {
+      if (!user || !token) {
         setOrders([]);
         setWishlist([]);
         return;
       }
 
       try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+
         // Fetch Orders
-        const resOrders = await fetch(`${API_URL}/orders/${user.id}`);
+        const resOrders = await fetch(`${API_URL}/orders/${user.id}`, { headers });
+        if (resOrders.status === 401) return logout(); // Token expired
+
         if (resOrders.ok) {
           const data = await resOrders.json();
           const formattedOrders = data.map(o => ({
@@ -53,7 +63,7 @@ export function AppProvider({ children }) {
         }
 
         // Fetch Wishlist
-        const resWishlist = await fetch(`${API_URL}/wishlist/${user.id}`);
+        const resWishlist = await fetch(`${API_URL}/wishlist/${user.id}`, { headers });
         if (resWishlist.ok) {
           const wishlistData = await resWishlist.json();
           setWishlist(wishlistData);
@@ -64,20 +74,23 @@ export function AppProvider({ children }) {
     };
 
     fetchUserData();
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, token]); // logout omitted to prevent cycles
 
   const showToast = useCallback((msg, icon = '✅') => {
     setToast({ msg, icon });
     setTimeout(() => setToast(null), 2800);
   }, []);
 
-  const login = useCallback((userData) => {
+  const login = useCallback((userData, jwtToken) => {
     setUser(userData);
+    if (jwtToken) setToken(jwtToken);
     showToast(`Welcome, ${userData.name}! 👋`);
   }, [showToast]);
 
   const logout = useCallback(() => {
     setUser(null);
+    setToken(null);
     setCart([]);
     setWishlist([]);
     setOrders([]);
@@ -106,7 +119,7 @@ export function AppProvider({ children }) {
   const clearCart = useCallback(() => setCart([]), []);
 
   const placeOrder = useCallback(async (items, total, shipping, payment) => {
-    if (!user) {
+    if (!user || !token) {
       showToast('You must be logged in to place an order.', '⚠️');
       return;
     }
@@ -116,6 +129,7 @@ export function AppProvider({ children }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: user.id,
@@ -123,6 +137,8 @@ export function AppProvider({ children }) {
           totalAmount: total,
         }),
       });
+
+      if (response.status === 401) { logout(); return; }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -149,10 +165,10 @@ export function AppProvider({ children }) {
       console.error("Order error:", error);
       showToast(error.message || 'Failed to connect to backend', '❌');
     }
-  }, [clearCart, showToast, user]);
+  }, [clearCart, showToast, user, token, logout]);
 
   const toggleWishlist = useCallback(async (product) => {
-    if (!user) {
+    if (!user || !token) {
       showToast('You must be logged in to use the wishlist.', '⚠️');
       return;
     }
@@ -160,12 +176,17 @@ export function AppProvider({ children }) {
     try {
       const response = await fetch(`${API_URL}/wishlist/toggle`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId: user.id,
           product: product
         })
       });
+
+      if (response.status === 401) { logout(); return; }
 
       if (response.ok) {
         setWishlist(prev => {
@@ -182,7 +203,7 @@ export function AppProvider({ children }) {
       console.error("Failed to toggle wishlist", e);
       showToast('Error modifying wishlist', '❌');
     }
-  }, [showToast, user]);
+  }, [showToast, user, token, logout]);
 
   const isWishlisted = useCallback((id) => wishlist.some(i => i.id === id), [wishlist]);
 
@@ -191,7 +212,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      user, login, logout,
+      user, token, login, logout,
       cart, addToCart, removeFromCart, updateCartQty, clearCart,
       wishlist, toggleWishlist, isWishlisted,
       orders, placeOrder,

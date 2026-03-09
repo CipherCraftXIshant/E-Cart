@@ -45,21 +45,15 @@ export default function Signup({ navigate }) {
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (response.ok) {
+        setStep(2);
+        setTimeout(() => {
+          login(data.user, data.token); // Auto login after signup using the returned token
+          navigate('/');
+        }, 2000);
+      } else {
         setErrors({ email: data.message || 'Signup failed' });
-        setLoading(false);
-        return;
       }
-
-      login({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        avatar: data.user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-      });
-
-      setStep(2);
-      setTimeout(() => navigate('/'), 2000);
 
     } catch (error) {
       console.error("Signup error:", error);
@@ -81,7 +75,7 @@ export default function Signup({ navigate }) {
         <h2 style={{ fontSize: '2rem', color: 'var(--charcoal)', marginBottom: 12 }}>Account Created!</h2>
         <p style={{ color: 'var(--gray-mid)', fontSize: 16 }}>Welcome to e-cart, {form.name.split(' ')[0]}! Redirecting you to homepage…</p>
         <div style={{ width: 48, height: 48, border: '3px solid var(--saffron)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '24px auto 0' }} />
-        <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+        <style>{`@keyframes spin{from{ transform: rotate(0deg) }to{ transform: rotate(360deg) } } `}</style>
       </div>
     </main>
   );
@@ -89,7 +83,7 @@ export default function Signup({ navigate }) {
   return (
     <main style={{
       minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: `radial-gradient(ellipse at 80% 50%, rgba(249,115,22,0.09), transparent 60%), var(--cream)`,
+      background: `radial-gradient(ellipse at 80% 50%, rgba(249, 115, 22, 0.09), transparent 60%), var(--cream)`,
       padding: '40px 24px',
     }}>
       <div style={{
@@ -184,9 +178,9 @@ export default function Signup({ navigate }) {
       </div>
 
       <style>{`
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @media(max-width:480px){.signup-grid{grid-template-columns:1fr!important;}}
-      `}</style>
+@keyframes spin{from{ transform: rotate(0deg) }to{ transform: rotate(360deg) } }
+@media(max-width: 480px) { .signup-grid{ grid-template-columns: 1fr!important; } }
+`}</style>
     </main>
   );
 }

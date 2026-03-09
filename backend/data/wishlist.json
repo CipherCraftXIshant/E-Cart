@@ -35,5 +35,24 @@
         "inStock": true
       }
     ]
+  },
+  {
+    "userId": "1773058032081",
+    "items": [
+      {
+        "id": "g1",
+        "cat": "groceries",
+        "name": "Organic Dhaga Mishri",
+        "price": 349,
+        "old": 499,
+        "rating": 4.9,
+        "reviews": 71,
+        "img": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500&q=80",
+        "badge": "Organic",
+        "brand": "Nature's Best",
+        "desc": "Pure crystal sugar, hand-spun on strings. Perfect for prasad and everyday use. No additives, no chemicals.",
+        "inStock": true
+      }
+    ]
   }
 ]
