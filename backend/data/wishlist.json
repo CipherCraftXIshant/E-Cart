@@ -1,9 +1,5 @@
 [
   {
-    "userId": "123",
-    "items": []
-  },
-  {
     "userId": "1772430828698",
     "items": [
       {
@@ -32,6 +28,20 @@
         "badge": "Best Seller",
         "brand": "KachiGhaani",
         "desc": "Wooden cold-pressed for maximum nutrition. Rich in antioxidants and healthy fats. Zero chemicals.",
+        "inStock": true
+      },
+      {
+        "id": "b3",
+        "cat": "beauty",
+        "name": "Charcoal Clay Mask",
+        "price": 449,
+        "old": 599,
+        "rating": 4.6,
+        "reviews": 312,
+        "img": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&q=80",
+        "badge": "Detox",
+        "brand": "ClearSkin",
+        "desc": "Activated bamboo charcoal + kaolin clay. Draws out impurities and minimizes pores.",
         "inStock": true
       }
     ]
