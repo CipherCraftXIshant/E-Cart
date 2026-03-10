@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development_purposes';
 
 const authMiddleware = (req, res, next) => {
-    // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {

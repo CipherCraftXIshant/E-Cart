@@ -27,7 +27,7 @@ exports.signup = (req, res) => {
             id: Date.now().toString(),
             name,
             email,
-            password // Note: In a real app we'd hash this, but we're keeping it simple for the assignment
+            password 
         };
 
         users.push(newUser);

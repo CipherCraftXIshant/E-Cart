@@ -68,7 +68,7 @@ function AppShell() {
 
 // ── Simple placeholder pages ───────────────────────────────────────────────
 function ProfilePage({ navigate }) {
-  const { user } = { user: { name: 'Rahul Sharma', email: 'rahul@example.com', phone: '9876543210' } };
+  const { user } = { user: { name: 'Ishant Sharma', email: 'Ishant@example.com', phone: '9876543210' } };
   return (
     <main style={{ padding: '60px 24px', minHeight: '70vh' }}>
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
