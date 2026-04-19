@@ -1,0 +1,76 @@
+const User = require('../models/User.model');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development_purposes';
+
+// SIGNUP
+exports.signup = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required" });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
+        }
+
+        const newUser = new User({ name, email, password });
+        await newUser.save();
+
+        // Prepare consistent user object for frontend (with string 'id')
+        const userObj = newUser.toObject();
+        const { password: _, _id, __v, ...userWithoutPassword } = userObj;
+        userWithoutPassword.id = _id.toString();
+
+        // Generate JWT
+        const token = jwt.sign(
+            { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({ message: "Signup successful", user: userWithoutPassword, token });
+
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// LOGIN
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+        // Validate user - checking password directly (Note: hashing is better but we keep current logic)
+        const user = await User.findOne({ email, password });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        const userObj = user.toObject();
+        const { password: _, _id, __v, ...userWithoutPassword } = userObj;
+        userWithoutPassword.id = _id.toString();
+
+        // Generate JWT
+        const token = jwt.sign(
+            { id: userWithoutPassword.id, email: userWithoutPassword.email, name: userWithoutPassword.name },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(200).json({ message: "Login successful", user: userWithoutPassword, token });
+
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
