@@ -46,9 +46,9 @@ exports.toggleWishlist = async (req, res) => {
             // If it doesn't, add it
             userRecord.items.push({
                 id: product.id,
-                title: product.title,
+                name: product.name,
                 price: product.price,
-                thumbnail: product.thumbnail
+                img: product.img
             });
             action = "added";
         }
