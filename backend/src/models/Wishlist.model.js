@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const wishlistItemSchema = new mongoose.Schema({
     id: { type: String, required: true },
-    title: { type: String, required: true },
+    name: { type: String, required: true },
     price: { type: Number, required: true },
-    thumbnail: { type: String }
+    img: { type: String }
 }, { _id: false });
 
 const wishlistSchema = new mongoose.Schema({
