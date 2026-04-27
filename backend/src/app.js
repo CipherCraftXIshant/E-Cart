@@ -27,6 +27,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const productRoutes = require('./routes/product.routes');
+const flashRoutes = require('./routes/flash.routes');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -35,5 +36,6 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/flash', flashRoutes);
 
 module.exports = app;

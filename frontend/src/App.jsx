@@ -13,6 +13,7 @@ import Wishlist from './pages/Features/Wishlist';
 import SearchResults from './pages/Features/SearchResults';
 import OrdersPage from './pages/Features/OrdersPage';
 import OAuthSuccess from './pages/Features/OAuthSuccess';
+import FlashSaleBanner from './components/FlashSaleBanner';
 import './styles/global.css';
 
 // ── Simple client-side router ──────────────────────────────────────────────
@@ -61,6 +62,7 @@ function AppShell() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <FlashSaleBanner />
       <Navbar navigate={navigate} currentPage={page.route} />
       <div style={{ flex: 1 }}>
         {renderPage()}
