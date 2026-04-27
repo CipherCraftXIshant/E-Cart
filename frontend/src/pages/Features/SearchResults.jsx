@@ -1,17 +1,29 @@
-import { useMemo } from 'react';
-import { allProducts } from '../../data/products';
+import { useState, useEffect } from 'react';
+import { API_URL } from '../../context/AppContext';
 import ProductCard from '../../components/ProductCard';
 
 export default function SearchResults({ query, navigate }) {
-  const results = useMemo(() => {
-    const q = (query || '').toLowerCase();
-    if (!q) return [];
-    return allProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
-      p.cat.toLowerCase().includes(q) ||
-      p.desc.toLowerCase().includes(q)
-    );
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const q = (query || '').trim();
+    if (!q) {
+      setResults([]);
+      return;
+    }
+    
+    setLoading(true);
+    fetch(`${API_URL}/products?search=${encodeURIComponent(q)}`)
+      .then(res => res.json())
+      .then(data => {
+        setResults(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Search error:', err);
+        setLoading(false);
+      });
   }, [query]);
 
   return (

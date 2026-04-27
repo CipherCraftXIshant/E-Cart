@@ -26,8 +26,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+const productRoutes = require('./routes/product.routes');
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);

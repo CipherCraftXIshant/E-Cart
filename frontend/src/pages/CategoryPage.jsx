@@ -1,11 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { API_URL } from '../context/AppContext';
 import ProductCard from '../components/ProductCard';
-import { getByCategory, CATEGORIES, CAT_META } from '../data/products';
+import { CATEGORIES, CAT_META } from '../data/products';
 
 export default function CategoryPage({ categoryKey, navigate }) {
   const meta     = CAT_META[categoryKey] || CAT_META.groceries;
   const catObj   = CATEGORIES.find(c => c.key === categoryKey) || CATEGORIES[0];
-  const products = getByCategory(categoryKey);
+
+  const [products,     setProducts]     = useState([]);
+  const [loading,      setLoading]      = useState(true);
 
   const [sort,         setSort]         = useState('default');
   const [search,       setSearch]       = useState('');
@@ -14,18 +17,28 @@ export default function CategoryPage({ categoryKey, navigate }) {
   const [maxPrice,     setMaxPrice]     = useState(Infinity);
   const [filOpen,      setFilOpen]      = useState(false);
 
-  const displayed = useMemo(() => {
-    let arr = [...products];
-    if (search)          arr = arr.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.brand.toLowerCase().includes(search.toLowerCase()));
-    if (inStockOnly)     arr = arr.filter(p => p.inStock);
-    if (minRating)       arr = arr.filter(p => p.rating >= minRating);
-    if (maxPrice < Infinity) arr = arr.filter(p => p.price <= maxPrice);
-    if (sort === 'price-asc')  arr.sort((a,b) => a.price - b.price);
-    if (sort === 'price-desc') arr.sort((a,b) => b.price - a.price);
-    if (sort === 'rating')     arr.sort((a,b) => b.rating - a.rating);
-    if (sort === 'discount')   arr.sort((a,b) => (b.old - b.price) - (a.old - a.price));
-    return arr;
-  }, [products, sort, search, inStockOnly, minRating, maxPrice]);
+  useEffect(() => {
+    setLoading(true);
+    let url = `${API_URL}/products?cat=${categoryKey}`;
+    
+    // Add filters
+    if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+    if (inStockOnly) url += `&inStockOnly=true`;
+    if (minRating > 0) url += `&minRating=${minRating}`;
+    if (maxPrice < Infinity) url += `&maxPrice=${maxPrice}`;
+    if (sort !== 'default') url += `&sort=${sort.replace('-', '_')}`;
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Fetch products error:", err);
+        setLoading(false);
+      });
+  }, [categoryKey, sort, search, inStockOnly, minRating, maxPrice]);
 
   const clearFilters = () => { setSearch(''); setInStockOnly(false); setMinRating(0); setMaxPrice(Infinity); setSort('default'); };
 
@@ -93,7 +106,7 @@ export default function CategoryPage({ categoryKey, navigate }) {
           </button>
 
           <span style={{ marginLeft:'auto', fontSize:13, color:'var(--gm)' }}>
-            Showing <b>{displayed.length}</b> of {products.length}
+            Showing <b>{products.length}</b> results
           </span>
         </div>
 
@@ -129,7 +142,9 @@ export default function CategoryPage({ categoryKey, navigate }) {
 
       {/* Products Grid */}
       <div style={{ padding:'40px 24px 80px', maxWidth:1280, margin:'0 auto' }}>
-        {displayed.length === 0 ? (
+        {loading ? (
+            <div style={{ textAlign:'center', padding:'80px 24px', color:'var(--gm)', fontSize: 18 }}>Loading products...</div>
+        ) : products.length === 0 ? (
           <div style={{ textAlign:'center', padding:'80px 24px', color:'var(--gm)' }}>
             <div style={{ fontSize:60, marginBottom:16 }}>🔍</div>
             <h3 style={{ fontSize:'1.5rem', color:'var(--ch)', marginBottom:8 }}>No products found</h3>
@@ -138,7 +153,7 @@ export default function CategoryPage({ categoryKey, navigate }) {
           </div>
         ) : (
           <div className="grid-4">
-            {displayed.map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
+            {products.map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
           </div>
         )}
       </div>

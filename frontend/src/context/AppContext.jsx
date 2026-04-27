@@ -88,6 +88,10 @@ export function AppProvider({ children }) {
     showToast(`Welcome, ${userData.name}! 👋`);
   }, [showToast]);
 
+  const updateUser = useCallback((newData) => {
+    setUser(prev => ({ ...prev, ...newData }));
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
@@ -135,6 +139,8 @@ export function AppProvider({ children }) {
           userId: user.id,
           items: items,
           totalAmount: total,
+          shipping: shipping,
+          payment: payment
         }),
       });
 
@@ -212,7 +218,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      user, token, login, logout,
+      user, token, login, logout, updateUser,
       cart, addToCart, removeFromCart, updateCartQty, clearCart,
       wishlist, toggleWishlist, isWishlisted,
       orders, placeOrder,

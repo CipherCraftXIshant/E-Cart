@@ -1,8 +1,19 @@
+import { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
-import { CATEGORIES, REVIEWS, getTrending, getByCategory } from '../data/products';
+import { CATEGORIES, REVIEWS } from '../data/products';
+import { API_URL } from '../context/AppContext';
 
 export default function Home({ navigate }) {
-  const trending = getTrending();
+  const [trending, setTrending] = useState([]);
+  const [groceries, setGroceries] = useState([]);
+  const [electronics, setElectronics] = useState([]);
+  
+  useEffect(() => {
+    fetch(`${API_URL}/products?sort=rating&limit=4`).then(r => r.json()).then(setTrending).catch(console.error);
+    fetch(`${API_URL}/products?cat=groceries&limit=4`).then(r => r.json()).then(setGroceries).catch(console.error);
+    fetch(`${API_URL}/products?cat=electronics&limit=4`).then(r => r.json()).then(setElectronics).catch(console.error);
+  }, []);
+
   const doubled = [...REVIEWS, ...REVIEWS];
 
   return (
@@ -87,7 +98,7 @@ export default function Home({ navigate }) {
             <button className="btn-outline" style={{ border: 'none', color: 'var(--saffron)' }} onClick={() => navigate('/groceries')}>View All →</button>
           </div>
           <div className="grid-4">
-            {getByCategory('groceries').slice(0, 4).map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
+            {groceries.map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
           </div>
         </div>
       </section>
@@ -103,7 +114,7 @@ export default function Home({ navigate }) {
             <button className="btn-outline" style={{ border: 'none', color: 'var(--saffron)' }} onClick={() => navigate('/electronics')}>View All →</button>
           </div>
           <div className="grid-4">
-            {getByCategory('electronics').slice(0, 4).map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
+            {electronics.map(p => <ProductCard key={p.id} product={p} navigate={navigate} />)}
           </div>
         </div>
       </section>

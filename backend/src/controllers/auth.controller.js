@@ -50,9 +50,14 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-        // Validate user - checking password directly (Note: hashing is better but we keep current logic)
-        const user = await User.findOne({ email, password });
-        if (!user) {
+        // Find user by email, then securely compare hashed password
+        const user = await User.findOne({ email });
+        if (!user || !user.password) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
@@ -71,6 +76,33 @@ exports.login = async (req, res) => {
 
     } catch (error) {
         console.error("Login error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// UPDATE PROFILE
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { name, avatar } = req.body;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { name, avatar },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const userObj = updatedUser.toObject();
+        const { password: _, _id, __v, ...userWithoutPassword } = userObj;
+        userWithoutPassword.id = _id.toString();
+
+        res.status(200).json({ message: "Profile updated successfully", user: userWithoutPassword });
+    } catch (error) {
+        console.error("Update profile error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };

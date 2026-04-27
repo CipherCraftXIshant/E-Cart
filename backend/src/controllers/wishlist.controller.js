@@ -1,4 +1,5 @@
 const Wishlist = require('../models/Wishlist.model');
+const Product = require('../models/Product.model');
 
 // Helper to get or create user wishlist
 const getUserWishlist = async (userId) => {
@@ -16,7 +17,15 @@ exports.getWishlist = async (req, res) => {
         const { userId } = req.params;
         const userWishlist = await getUserWishlist(userId);
 
-        res.status(200).json(userWishlist.items);
+        if (!userWishlist.items || userWishlist.items.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // Fetch full product details using the stored IDs
+        const itemIds = userWishlist.items.map(item => item.id);
+        const fullProducts = await Product.find({ id: { $in: itemIds } });
+
+        res.status(200).json(fullProducts);
     } catch (error) {
         console.error("Get wishlist error:", error);
         res.status(500).json({ message: "Internal server error" });

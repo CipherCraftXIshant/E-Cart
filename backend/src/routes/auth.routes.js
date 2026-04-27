@@ -4,8 +4,11 @@ const authController = require('../controllers/auth.controller');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 
+const authMiddleware = require('../middlewares/auth.middleware');
+
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
+router.put('/profile', authMiddleware, authController.updateProfile);
 
 // Step 1: Redirect to Google
 router.get(
@@ -26,7 +29,7 @@ router.get(
     );
 
     // Send token to frontend!
-    res.redirect(`http://localhost:5173/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify({id: req.user._id, name: req.user.name, email: req.user.email}))}`);
+    res.redirect(`http://localhost:5173/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify({id: req.user._id, name: req.user.name, email: req.user.email, avatar: req.user.avatar}))}`);
   }
 );
 
