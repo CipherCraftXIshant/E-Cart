@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useApp, API_URL } from '../../context/AppContext';
-import { allProducts } from '../../data/products';
+
 import ProductCard from '../../components/ProductCard';
 
 export default function ProductDetail({ product, navigate }) {
-  const { addToCart, toggleWishlist, isWishlisted, user, showToast } = useApp();
+  const { addToCart, toggleWishlist, isWishlisted, user, token, showToast } = useApp();
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState('desc');
   const [reviews, setReviews] = useState([]);
@@ -39,7 +39,10 @@ export default function ProductDetail({ product, navigate }) {
 
       const res = await fetch(`${API_URL}/reviews`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -63,7 +66,14 @@ export default function ProductDetail({ product, navigate }) {
     : product.rating.toFixed(1);
   const reviewCount = reviews.length > 0 ? reviews.length : product.reviews;
 
-  const related = allProducts.filter(p => p.cat === product.cat && p.id !== product.id).slice(0, 4);
+  const [related, setRelated] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/products?cat=${product.cat}&limit=5`)
+      .then(res => res.json())
+      .then(data => setRelated(data.filter(p => p.id !== product.id).slice(0, 4)))
+      .catch(console.error);
+  }, [product.cat, product.id]);
   const pct = Math.round(((product.old - product.price) / product.old) * 100);
 
   return (

@@ -24,6 +24,18 @@ const orderSchema = new mongoose.Schema({
         required: true,
         default: 0
     },
+    shipping: {
+        name: { type: String, required: true },
+        phone: { type: String, required: true },
+        address: { type: String, required: true },
+        city: { type: String, required: true },
+        pin: { type: String, required: true }
+    },
+    payment: {
+        type: String,
+        required: true,
+        default: 'Cash on Delivery'
+    },
     orderDate: {
         type: Date,
         default: Date.now

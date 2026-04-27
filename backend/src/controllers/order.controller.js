@@ -4,10 +4,10 @@ const User = require('../models/User.model');
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
     try {
-        const { userId, items, totalAmount } = req.body;
+        const { userId, items, totalAmount, shipping, payment } = req.body;
 
-        if (!userId || !items || items.length === 0) {
-            return res.status(400).json({ message: "UserId and items are required to create an order" });
+        if (!userId || !items || items.length === 0 || !shipping) {
+            return res.status(400).json({ message: "UserId, items, and shipping details are required to create an order" });
         }
 
         const user = await User.findById(userId);
@@ -19,7 +19,9 @@ exports.createOrder = async (req, res) => {
             userId,
             customerName: user.name,
             items: items,
-            totalAmount: totalAmount || 0
+            totalAmount: totalAmount || 0,
+            shipping: shipping,
+            payment: payment || 'Cash on Delivery'
         });
 
         await newOrder.save();
@@ -44,6 +46,15 @@ exports.getOrdersByUser = async (req, res) => {
 
         const userOrders = await Order.find({ userId }).sort({ orderDate: -1 });
 
+        // Auto-update to Delivered if > 2 hours old
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        for (let order of userOrders) {
+            if (order.status === 'Processing' && order.orderDate < twoHoursAgo) {
+                order.status = 'Delivered';
+                await order.save();
+            }
+        }
+
         res.status(200).json(userOrders);
 
     } catch (error) {
@@ -56,6 +67,16 @@ exports.getOrdersByUser = async (req, res) => {
 exports.getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ orderDate: -1 });
+        
+        // Auto-update to Delivered if > 2 hours old
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        for (let order of orders) {
+            if (order.status === 'Processing' && order.orderDate < twoHoursAgo) {
+                order.status = 'Delivered';
+                await order.save();
+            }
+        }
+
         res.status(200).json(orders);
     } catch (error) {
         console.error("Get all orders error:", error);

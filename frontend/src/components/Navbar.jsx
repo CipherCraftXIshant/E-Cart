@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useApp } from '../context/AppContext';
-import { CATEGORIES, allProducts } from '../data/products';
+import { useApp, API_URL } from '../context/AppContext';
+import { CATEGORIES } from '../data/products';
 
 const NAV_LINKS = [
   { label: 'Home', route: '/' },
@@ -24,20 +24,25 @@ export default function Navbar({ navigate, currentRoute }) {
   const accRef = useRef(null);
   const searchRef = useRef(null);
 
-  // Update suggestions
-  useEffect(() => {
-    const q = searchVal.trim().toLowerCase();
+  const fetchSuggestions = (q) => {
     if (!q) {
       setSuggestions([]);
       return;
     }
-    const matches = allProducts.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.brand.toLowerCase().includes(q) ||
-      p.cat.toLowerCase().includes(q) ||
-      p.desc.toLowerCase().includes(q)
-    ).slice(0, 5);
-    setSuggestions(matches);
+    fetch(`${API_URL}/products?search=${encodeURIComponent(q)}&limit=5`)
+      .then(res => res.json())
+      .then(data => setSuggestions(data))
+      .catch(console.error);
+  };
+
+  // Update suggestions
+  useEffect(() => {
+    const q = searchVal.trim();
+    const timeoutId = setTimeout(() => {
+      fetchSuggestions(q);
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
   }, [searchVal]);
 
   // Shadow on scroll
@@ -85,7 +90,7 @@ export default function Navbar({ navigate, currentRoute }) {
         <div ref={searchRef} style={{ flex: 1, maxWidth: 420, position: 'relative' }}>
           <form onSubmit={handleSearch} className="nav-search"
             style={{ display: 'flex', alignItems: 'center', background: 'var(--saffron-p)', border: '1.5px solid var(--saffron-l)', borderRadius: 50, padding: '8px 16px', gap: 8, transition: 'border-color .25s, box-shadow .25s' }}
-            onFocus={e => { e.currentTarget.style.borderColor = 'var(--saffron)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(249,115,22,.12)'; if (searchVal) setSuggestions(allProducts.filter(p => p.name.toLowerCase().includes(searchVal.trim().toLowerCase())).slice(0, 5)); }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'var(--saffron)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(249,115,22,.12)'; if (searchVal) fetchSuggestions(searchVal.trim()); }}
             onBlur={e => { e.currentTarget.style.borderColor = 'var(--saffron-l)'; e.currentTarget.style.boxShadow = 'none'; }}>
             <span style={{ color: '#9ca3af' }}>🔍</span>
             <input value={searchVal} onChange={e => { setSearchVal(e.target.value); }}

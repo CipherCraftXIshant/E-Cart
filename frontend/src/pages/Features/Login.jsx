@@ -119,7 +119,7 @@ export default function Login({ navigate }) {
           <div style={{ flex: 1, height: 1, background: 'var(--gray-light)' }} />
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <a href="http://localhost:3000/api/auth/google" style={{
+          <a href={`${API_URL}/auth/google`} style={{
             flex: 1, padding: '11px', border: '2px solid var(--gray-light)', borderRadius: 12,
             background: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { AppProvider, useApp } from './context/AppContext';
+import { AppProvider, useApp, API_URL } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
@@ -73,7 +73,11 @@ function AppShell() {
 
 // ── Simple placeholder pages ───────────────────────────────────────────────
 function ProfilePage({ navigate }) {
-  const { user, logout } = useApp();
+  const { user, logout, token, updateUser } = useApp();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({ name: '' });
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
 
   if (!user) {
     return (
@@ -84,8 +88,75 @@ function ProfilePage({ navigate }) {
     );
   }
 
+  const handleEditClick = () => {
+    setFormData({ name: user.name });
+    setError('');
+    setIsEditing(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+    
+    const formDataObj = new FormData();
+    formDataObj.append('image', file);
+
+    try {
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formDataObj
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Optimistically update the avatar in UI before saving profile
+        setFormData(prev => ({ ...prev, avatar: data.imageUrl }));
+      } else {
+        setError(data.message || 'Image upload failed');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Network error uploading image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!formData.name.trim()) return setError('Name cannot be empty');
+    setUploading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name: formData.name, avatar: formData.avatar || user.avatar })
+      });
+      const data = await res.json();
+      
+      if (res.ok) {
+        updateUser({ name: data.user.name, avatar: data.user.avatar });
+        setIsEditing(false);
+      } else {
+        setError(data.message || 'Failed to update profile');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Network error updating profile');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Generate initials
   const initials = user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const displayAvatar = formData.avatar || user.avatar;
 
   return (
     <main style={{ padding: '60px 24px', minHeight: '70vh' }}>
@@ -97,21 +168,61 @@ function ProfilePage({ navigate }) {
         
         <div style={{ background: 'white', borderRadius: 20, padding: '32px', boxShadow: 'var(--shadow)', border: '1px solid rgba(249,115,22,0.10)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 32, flexWrap: 'wrap' }}>
-            <div style={{ width: 72, height: 72, background: 'var(--saffron)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'white', fontWeight: 700 }}>
-              {initials}
+            
+            <div style={{ position: 'relative' }}>
+              {displayAvatar ? (
+                <img src={displayAvatar} alt="Profile" referrerPolicy="no-referrer" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--saffron-light)' }} />
+              ) : (
+                <div style={{ width: 80, height: 80, background: 'var(--saffron)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'white', fontWeight: 700 }}>
+                  {initials}
+                </div>
+              )}
+              {isEditing && (
+                 <label style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--saffron)', color: 'white', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+                    📷
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploading} />
+                 </label>
+              )}
             </div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--charcoal)' }}>{user.name}</div>
+
+            <div style={{ flex: 1 }}>
+              {isEditing ? (
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})} 
+                  style={{ width: '100%', padding: '8px 12px', fontSize: 18, borderRadius: 8, border: '1px solid var(--gray-light)', marginBottom: 8 }}
+                />
+              ) : (
+                <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--charcoal)', marginBottom: 4 }}>{user.name}</div>
+              )}
               <div style={{ color: 'var(--gray-mid)' }}>Member</div>
             </div>
           </div>
-          {[['👤 Full Name', user.name], ['📧 Email', user.email], ['🔑 User ID', user.id || 'N/A']].map(([lbl, val]) => (
+
+          {error && <div style={{ color: 'var(--error)', fontSize: 14, marginBottom: 16 }}>{error}</div>}
+
+          {[['📧 Email', user.email], ['🔑 User ID', user.id || 'N/A']].map(([lbl, val]) => (
             <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--gray-light)', fontSize: 15 }}>
               <span style={{ color: 'var(--gray-mid)', fontWeight: 500 }}>{lbl}</span>
               <span style={{ fontWeight: 600, color: 'var(--charcoal)' }}>{val}</span>
             </div>
           ))}
-          <button className="btn-primary" style={{ marginTop: 24 }}>✏️ Edit Profile</button>
+          
+          <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+            {isEditing ? (
+              <>
+                <button onClick={handleSaveProfile} disabled={uploading} className="btn-primary" style={{ flex: 1, opacity: uploading ? 0.7 : 1 }}>
+                  {uploading ? '⏳ Saving...' : '💾 Save Changes'}
+                </button>
+                <button onClick={() => setIsEditing(false)} disabled={uploading} className="btn-o" style={{ flex: 1 }}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button onClick={handleEditClick} className="btn-primary">✏️ Edit Profile</button>
+            )}
+          </div>
         </div>
       </div>
     </main>
