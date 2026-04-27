@@ -3,11 +3,10 @@ import { useApp } from '../../context/AppContext';
 export default function OrdersPage({ navigate }) {
     const { orders } = useApp();
 
-    const getOrderStatus = (orderDate) => {
-        const hoursElapsed = (new Date() - new Date(orderDate)) / (1000 * 60 * 60);
-        if (hoursElapsed > 48) return { text: 'Delivered', color: 'var(--ok)' };
-        if (hoursElapsed > 24) return { text: 'In Transit', color: 'var(--saffron)' };
-        return { text: 'Processing', color: '#6366f1' }; // Indigo
+    const getStatusStyle = (status) => {
+        if (status === 'Delivered') return { text: 'Delivered ✅', color: 'var(--ok, #16a34a)' };
+        if (status === 'In Transit') return { text: 'In Transit 🚚', color: 'var(--saffron)' };
+        return { text: 'Processing 🔄', color: '#6366f1' };
     };
 
     if (orders.length === 0) return (
@@ -24,12 +23,19 @@ export default function OrdersPage({ navigate }) {
     return (
         <main style={{ padding: '60px 24px', minHeight: '70vh' }}>
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
-                <h1 style={{ fontSize: '2rem', color: 'var(--ch)', marginBottom: 8 }}>My Orders 📦</h1>
-                <p style={{ color: 'var(--gm)', marginBottom: 40 }}>Track and manage your orders here.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
+                    <h1 style={{ fontSize: '2rem', color: 'var(--ch)', margin: 0 }}>My Orders 📦</h1>
+                    {/* Live indicator */}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 50 }}>
+                        <span style={{ width: 8, height: 8, background: '#dc2626', borderRadius: '50%', display: 'inline-block', animation: 'livePulse 1.2s ease-in-out infinite' }} />
+                        LIVE
+                    </span>
+                </div>
+                <p style={{ color: 'var(--gm)', marginBottom: 40 }}>Track and manage your orders here. Status updates automatically.</p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                     {orders.map(ord => {
-                        const status = getOrderStatus(ord.date);
+                        const status = getStatusStyle(ord.status || 'Processing');
                         return (
                             <div key={ord.id} style={{
                                 background: 'white', borderRadius: 16, padding: '24px',
@@ -84,3 +90,13 @@ export default function OrdersPage({ navigate }) {
         </main>
     );
 }
+
+/* CSS animation for the live pulse dot */
+const _styles = document.createElement('style');
+_styles.textContent = `
+    @keyframes livePulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.4; transform: scale(1.5); }
+    }
+`;
+document.head.appendChild(_styles);

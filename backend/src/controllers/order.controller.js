@@ -1,5 +1,7 @@
 const Order = require('../models/Order.model');
 const User = require('../models/User.model');
+const socketManager = require('../socket');
+
 
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
@@ -26,6 +28,16 @@ exports.createOrder = async (req, res) => {
 
         await newOrder.save();
 
+        // Notify the user in real-time that their order was placed
+        try {
+            const io = socketManager.getIO();
+            io.to(userId.toString()).emit('order:new', {
+                orderId: newOrder._id,
+                status: newOrder.status,
+                totalAmount: newOrder.totalAmount
+            });
+        } catch (_) { /* Socket not yet connected, skip */ }
+
         res.status(201).json({ message: "Order placed successfully", order: newOrder });
 
     } catch (error) {
@@ -46,12 +58,21 @@ exports.getOrdersByUser = async (req, res) => {
 
         const userOrders = await Order.find({ userId }).sort({ orderDate: -1 });
 
-        // Auto-update to Delivered if > 2 hours old
+        // Auto-update to Delivered if > 2 hours old and emit socket event
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
         for (let order of userOrders) {
             if (order.status === 'Processing' && order.orderDate < twoHoursAgo) {
                 order.status = 'Delivered';
                 await order.save();
+
+                // Push real-time status update to user
+                try {
+                    const io = socketManager.getIO();
+                    io.to(userId.toString()).emit('order:statusUpdated', {
+                        orderId: order._id,
+                        status: 'Delivered'
+                    });
+                } catch (_) { /* Socket not connected, skip */ }
             }
         }
 

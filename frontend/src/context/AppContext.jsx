@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { io as socketIO } from 'socket.io-client';
 
 const AppContext = createContext(null);
 export const API_URL = "http://localhost:3000/api";
@@ -10,6 +11,8 @@ export function AppProvider({ children }) {
   const [wishlist, setWishlist] = useState(() => JSON.parse(localStorage.getItem('ecart_wishlist')) || []);
   const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('ecart_orders')) || []);
   const [toast, setToast] = useState(null);
+  const [flashSale, setFlashSale] = useState(null); // { discount, code, endsAt, message }
+  const socketRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('ecart_user', JSON.stringify(user));
@@ -87,6 +90,52 @@ export function AppProvider({ children }) {
     if (jwtToken) setToken(jwtToken);
     showToast(`Welcome, ${userData.name}! 👋`);
   }, [showToast]);
+
+  // Socket.io — connect for ALL visitors (flash sales work for everyone)
+  useEffect(() => {
+    const socket = socketIO('http://localhost:3000', { transports: ['websocket'] });
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('[Socket.io] Connected:', socket.id);
+      // Join private user room only if logged in (for order tracking)
+      if (user?.id) socket.emit('join', user.id);
+    });
+
+    // Live Order Tracking: status changed (e.g. Processing → Delivered)
+    socket.on('order:statusUpdated', ({ orderId, status }) => {
+      setOrders(prev => prev.map(o => {
+        if (o.id.includes(orderId.toString().slice(-6))) {
+          return { ...o, status };
+        }
+        return o;
+      }));
+      showToast(`Your order status updated to: ${status} 📦`);
+    });
+
+    // Flash Sale Announcements: broadcast from admin to ALL users
+    socket.on('flashSale:start', (data) => {
+      setFlashSale(data);
+    });
+
+    socket.on('flashSale:end', () => {
+      setFlashSale(null);
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Connect once on mount
+
+  // Re-join user room when user logs in
+  useEffect(() => {
+    if (user?.id && socketRef.current?.connected) {
+      socketRef.current.emit('join', user.id);
+    }
+  }, [user?.id]);
+
 
   const updateUser = useCallback((newData) => {
     setUser(prev => ({ ...prev, ...newData }));
@@ -224,6 +273,7 @@ export function AppProvider({ children }) {
       orders, placeOrder,
       cartCount, cartTotal,
       toast, showToast,
+      flashSale, setFlashSale,
     }}>
       {children}
     </AppContext.Provider>
