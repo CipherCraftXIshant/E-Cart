@@ -2,7 +2,6 @@ const Order = require('../models/Order.model');
 const User = require('../models/User.model');
 const socketManager = require('../socket');
 
-
 // CREATE ORDER
 exports.createOrder = async (req, res) => {
     try {
@@ -62,17 +61,16 @@ exports.getOrdersByUser = async (req, res) => {
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
         for (let order of userOrders) {
             if (order.status === 'Processing' && order.orderDate < twoHoursAgo) {
+                await Order.updateOne({ _id: order._id }, { $set: { status: 'Delivered' } });
                 order.status = 'Delivered';
-                await order.save();
-
-                // Push real-time status update to user
+                // Emit real-time update to this user's socket room
                 try {
                     const io = socketManager.getIO();
                     io.to(userId.toString()).emit('order:statusUpdated', {
                         orderId: order._id,
                         status: 'Delivered'
                     });
-                } catch (_) { /* Socket not connected, skip */ }
+                } catch (_) { /* Socket not ready, skip */ }
             }
         }
 
@@ -93,8 +91,8 @@ exports.getAllOrders = async (req, res) => {
         const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
         for (let order of orders) {
             if (order.status === 'Processing' && order.orderDate < twoHoursAgo) {
+                await Order.updateOne({ _id: order._id }, { $set: { status: 'Delivered' } });
                 order.status = 'Delivered';
-                await order.save();
             }
         }
 

@@ -15,5 +15,5 @@ socketManager.init(httpServer);
 
 httpServer.listen(PORT, () => {
     console.log(`E-cart Backend Server running on http://localhost:${PORT}`);
-    console.log(`[Socket.io] Real-time server ready`);
+    console.log(`[Socket.io] Real-time server ready ⚡`);
 });

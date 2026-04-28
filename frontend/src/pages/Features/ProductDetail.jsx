@@ -22,7 +22,6 @@ export default function ProductDetail({ product, navigate }) {
 
   const submitReview = async (e) => {
     e.preventDefault();
-    console.log("Submit clicked", newReview);
     if (!user) return showToast('Please login to review', '⚠️');
     if (!newReview.text.trim()) return showToast('Review text required', '⚠️');
 
@@ -35,13 +34,12 @@ export default function ProductDetail({ product, navigate }) {
         text: newReview.text
       };
 
-      console.log("Sending payload:", payload);
-
       const res = await fetch(`${API_URL}/reviews`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify(payload)
       });

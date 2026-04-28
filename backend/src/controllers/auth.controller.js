@@ -33,6 +33,14 @@ exports.signup = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Store JWT in HttpOnly cookie (JS cannot read this)
+        res.cookie('ecart_token', token, {
+            httpOnly: true,
+            secure: false,       // set to true in production (HTTPS)
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000  // 1 day
+        });
+
         res.status(201).json({ message: "Signup successful", user: userWithoutPassword, token });
 
     } catch (error) {
@@ -72,6 +80,14 @@ exports.login = async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Store JWT in HttpOnly cookie (JS cannot read this)
+        res.cookie('ecart_token', token, {
+            httpOnly: true,
+            secure: false,       // set to true in production (HTTPS)
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000  // 1 day
+        });
+
         res.status(200).json({ message: "Login successful", user: userWithoutPassword, token });
 
     } catch (error) {
@@ -100,9 +116,15 @@ exports.updateProfile = async (req, res) => {
         const { password: _, _id, __v, ...userWithoutPassword } = userObj;
         userWithoutPassword.id = _id.toString();
 
-        res.status(200).json({ message: "Profile updated successfully", user: userWithoutPassword });
+        res.status(200).json({ message: 'Profile updated successfully', user: userWithoutPassword });
     } catch (error) {
         console.error("Update profile error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
+};
+
+// LOGOUT — clears the HttpOnly cookie
+exports.logout = (req, res) => {
+    res.clearCookie('ecart_token', { httpOnly: true, sameSite: 'lax' });
+    res.status(200).json({ message: 'Logged out successfully' });
 };

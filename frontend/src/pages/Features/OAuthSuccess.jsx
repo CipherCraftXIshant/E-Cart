@@ -7,13 +7,13 @@ export default function OAuthSuccess({ navigate }) {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
     const userParam = params.get("user");
+    // Note: token is now stored in HttpOnly cookie by the backend — not in the URL
 
-    if (token && userParam) {
+    if (userParam) {
       try {
-        const user = JSON.parse(userParam);
-        login(user, token);
+        const user = JSON.parse(decodeURIComponent(userParam));
+        login(user);  // no token needed — cookie is sent automatically
         window.history.replaceState(null, '', '/');
         navigate("/");
       } catch (err) {
@@ -21,7 +21,7 @@ export default function OAuthSuccess({ navigate }) {
         setErrorMsg("Failed to parse user data from Google.");
       }
     } else {
-        setErrorMsg("Missing token or user data from backend redirect.");
+        setErrorMsg("Missing user data from backend redirect.");
     }
   }, [login, navigate]);
 

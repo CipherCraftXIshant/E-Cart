@@ -44,6 +44,7 @@ exports.startFlashSale = async (req, res) => {
 exports.endFlashSale = async (req, res) => {
     try {
         const io = socketManager.getIO();
+        socketManager.clearActiveFlashSale();
         io.emit('flashSale:end');
         res.status(200).json({ message: 'Flash sale ended.' });
     } catch (error) {

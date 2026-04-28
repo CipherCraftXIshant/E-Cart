@@ -8,7 +8,9 @@ const authMiddleware = require('../middlewares/auth.middleware');
 
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
+router.post('/logout', authController.logout);
 router.put('/profile', authMiddleware, authController.updateProfile);
+
 
 // Step 1: Redirect to Google
 router.get(
@@ -21,15 +23,23 @@ router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),
   (req, res) => {
-    // Generate JWT specific to our app
     const token = jwt.sign(
       { id: req.user._id, email: req.user.email, name: req.user.name },
       process.env.JWT_SECRET || 'fallback_secret_key_for_development_purposes',
       { expiresIn: "7d" }
     );
 
-    // Send token to frontend!
-    res.redirect(`http://localhost:5173/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify({id: req.user._id, name: req.user.name, email: req.user.email, avatar: req.user.avatar}))}`);
+    // Set JWT inside HttpOnly cookie
+    res.cookie('ecart_token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    });
+
+    // Only send user data in URL (no token exposed)
+    const userData = { id: req.user._id, name: req.user.name, email: req.user.email, avatar: req.user.avatar };
+    res.redirect(`http://localhost:5173/auth/success?user=${encodeURIComponent(JSON.stringify(userData))}`);
   }
 );
 

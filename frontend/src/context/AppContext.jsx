@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+
 import { io as socketIO } from 'socket.io-client';
 
 const AppContext = createContext(null);
@@ -38,18 +39,22 @@ export function AppProvider({ children }) {
   // Fetch true orders and wishlist on mount or user login
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!user || !token) {
+      if (!user) {
         setOrders([]);
         setWishlist([]);
         return;
       }
 
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
+        // credentials:'include' sends the HttpOnly cookie automatically
+        const opts = {
+          credentials: 'include',
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        };
 
         // Fetch Orders
-        const resOrders = await fetch(`${API_URL}/orders/${user.id}`, { headers });
-        if (resOrders.status === 401) return logout(); // Token expired
+        const resOrders = await fetch(`${API_URL}/orders/${user.id}`, opts);
+        if (resOrders.status === 401) return logout();
 
         if (resOrders.ok) {
           const data = await resOrders.json();
@@ -66,7 +71,7 @@ export function AppProvider({ children }) {
         }
 
         // Fetch Wishlist
-        const resWishlist = await fetch(`${API_URL}/wishlist/${user.id}`, { headers });
+        const resWishlist = await fetch(`${API_URL}/wishlist/${user.id}`, opts);
         if (resWishlist.ok) {
           const wishlistData = await resWishlist.json();
           setWishlist(wishlistData);
@@ -78,12 +83,41 @@ export function AppProvider({ children }) {
 
     fetchUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, token]); // logout omitted to prevent cycles
+  }, [user, token]);
 
   const showToast = useCallback((msg, icon = '✅') => {
     setToast({ msg, icon });
     setTimeout(() => setToast(null), 2800);
   }, []);
+
+  // ── Socket.io real-time connection ──────────────────────────────────
+
+  useEffect(() => {
+    const socket = socketIO('http://localhost:3000', { transports: ['websocket'] });
+    socketRef.current = socket;
+
+    // If an active flash sale exists when connecting, show it immediately
+    socket.on('flashSale:start', (data) => setFlashSale(data));
+    socket.on('flashSale:end', () => setFlashSale(null));
+
+    // Live order status updates — update matching order in state
+    socket.on('order:statusUpdated', ({ orderId, status }) => {
+      setOrders(prev => prev.map(o =>
+        o.id && o.id.endsWith(orderId.toString().slice(-6))
+          ? { ...o, status }
+          : o
+      ));
+    });
+
+    return () => socket.disconnect();
+  }, []);
+
+  // Join user's private socket room after login
+  useEffect(() => {
+    if (user && socketRef.current) {
+      socketRef.current.emit('join', user.id);
+    }
+  }, [user]);
 
   const login = useCallback((userData, jwtToken) => {
     setUser(userData);
@@ -141,9 +175,13 @@ export function AppProvider({ children }) {
     setUser(prev => ({ ...prev, ...newData }));
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Tell backend to clear the HttpOnly cookie
+    try { await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' }); } catch (_) {}
     setUser(null);
     setToken(null);
+    localStorage.removeItem('ecart_user');
+    localStorage.removeItem('ecart_token');
     setCart([]);
     setWishlist([]);
     setOrders([]);
@@ -172,7 +210,7 @@ export function AppProvider({ children }) {
   const clearCart = useCallback(() => setCart([]), []);
 
   const placeOrder = useCallback(async (items, total, shipping, payment) => {
-    if (!user || !token) {
+    if (!user) {
       showToast('You must be logged in to place an order.', '⚠️');
       return;
     }
@@ -180,9 +218,10 @@ export function AppProvider({ children }) {
     try {
       const response = await fetch(`${API_URL}/orders`, {
         method: 'POST',
+        credentials: 'include',  // sends HttpOnly cookie
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           userId: user.id,
@@ -223,7 +262,7 @@ export function AppProvider({ children }) {
   }, [clearCart, showToast, user, token, logout]);
 
   const toggleWishlist = useCallback(async (product) => {
-    if (!user || !token) {
+    if (!user) {
       showToast('You must be logged in to use the wishlist.', '⚠️');
       return;
     }
@@ -231,9 +270,10 @@ export function AppProvider({ children }) {
     try {
       const response = await fetch(`${API_URL}/wishlist/toggle`, {
         method: 'POST',
+        credentials: 'include',  // sends HttpOnly cookie
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...(token && { 'Authorization': `Bearer ${token}` })
         },
         body: JSON.stringify({
           userId: user.id,
@@ -274,6 +314,8 @@ export function AppProvider({ children }) {
       cartCount, cartTotal,
       toast, showToast,
       flashSale, setFlashSale,
+      socket: socketRef.current,
+
     }}>
       {children}
     </AppContext.Provider>

@@ -6,11 +6,18 @@ const wishlistRoutes = require('./routes/wishlist.routes');
 const reviewRoutes = require('./routes/review.routes');
 const uploadRoutes = require('./routes/upload.routes');
 
+const cookieParser = require('cookie-parser');
+
 const app = express();
 
 // Middlewares
-app.use(cors()); // Allow frontend to communicate with backend
-app.use(express.json()); // Parse JSON requests
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    credentials: true  // Required for cookies to be sent cross-origin
+}));
+app.use(express.json());
+app.use(cookieParser()); // Parse cookies from every request
+
 
 const session = require("express-session");
 const passport = require("./config/passport");

@@ -3,17 +3,15 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key_for_development_purposes';
 
 const authMiddleware = (req, res, next) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Try cookie first (new secure method), fallback to Authorization header
+    const token = req.cookies?.ecart_token || req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
         return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
     try {
-        // Verify token
         const decoded = jwt.verify(token, JWT_SECRET);
-
-        // Add user payload to the request
         req.user = decoded;
         next();
     } catch (err) {

@@ -1,153 +1,151 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 
 export default function FlashSaleBanner() {
-  const { flashSale, setFlashSale } = useApp();
-  const [timeLeft, setTimeLeft] = useState('');
-  const [copied, setCopied] = useState(false);
-  const [visible, setVisible] = useState(false);
+    const { flashSale, setFlashSale } = useApp();
+    const [timeLeft, setTimeLeft] = useState('');
+    const [copied, setCopied] = useState(false);
+    const [visible, setVisible] = useState(false);
 
-  // Animate in when flash sale starts
-  useEffect(() => {
-    if (flashSale) {
-      setVisible(true);
-    }
-  }, [flashSale]);
+    // Animate in when flashSale appears
+    useEffect(() => {
+        if (flashSale) {
+            setTimeout(() => setVisible(true), 50);
+        } else {
+            setVisible(false);
+        }
+    }, [flashSale]);
 
-  // Countdown timer
-  useEffect(() => {
-    if (!flashSale) return;
+    // Live countdown timer
+    useEffect(() => {
+        if (!flashSale) return;
 
-    const tick = () => {
-      const diff = new Date(flashSale.endsAt) - new Date();
-      if (diff <= 0) {
-        setFlashSale(null);
-        setVisible(false);
-        return;
-      }
-      const mins = Math.floor(diff / 60000);
-      const secs = Math.floor((diff % 60000) / 1000);
-      setTimeLeft(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
+        const update = () => {
+            const diff = new Date(flashSale.endsAt) - new Date();
+            if (diff <= 0) { setFlashSale(null); return; }
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            setTimeLeft(`${m}:${s.toString().padStart(2, '0')}`);
+        };
+
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
+    }, [flashSale, setFlashSale]);
+
+    const copyCode = () => {
+        navigator.clipboard.writeText(flashSale.code).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
     };
 
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [flashSale, setFlashSale]);
+    if (!flashSale) return null;
 
-  const copyCode = useCallback(() => {
-    if (!flashSale) return;
-    navigator.clipboard.writeText(flashSale.code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [flashSale]);
+    return (
+        <>
+            <style>{`
+                @keyframes flashSlideDown {
+                    from { transform: translateY(-100%); opacity: 0; }
+                    to   { transform: translateY(0);     opacity: 1; }
+                }
+                @keyframes flashPulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+                    50%      { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+                }
+                @keyframes flashSpin {
+                    from { transform: rotate(0deg); }
+                    to   { transform: rotate(360deg); }
+                }
+            `}</style>
 
-  const dismiss = () => {
-    setVisible(false);
-    setTimeout(() => setFlashSale(null), 400);
-  };
+            <div style={{
+                background: 'linear-gradient(135deg, #f97316 0%, #dc2626 50%, #9333ea 100%)',
+                color: 'white',
+                padding: '12px 24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12,
+                position: 'relative',
+                overflow: 'hidden',
+                animation: visible ? 'flashSlideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
+                zIndex: 1000,
+            }}>
+                {/* Shimmer overlay */}
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+                    backgroundSize: '200% 100%',
+                    animation: 'flashSpin 3s linear infinite',
+                    pointerEvents: 'none'
+                }} />
 
-  if (!flashSale) return null;
+                {/* Left: Icon + Message */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 24, animation: 'flashSpin 2s linear infinite' }}>⚡</span>
+                    <div>
+                        <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: 0.3 }}>
+                            {flashSale.message}
+                        </div>
+                        <div style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>
+                            Limited time offer — ends in <strong>{timeLeft}</strong>
+                        </div>
+                    </div>
+                </div>
 
-  return (
-    <>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 9999,
-        transform: visible ? 'translateY(0)' : 'translateY(-110%)',
-        transition: 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        background: 'linear-gradient(90deg, #7c3aed, #f97316, #dc2626)',
-        backgroundSize: '300% 100%',
-        animation: 'flashGradient 3s ease infinite',
-        boxShadow: '0 4px 24px rgba(249,115,22,0.5)',
-        padding: '14px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 20,
-        flexWrap: 'wrap',
-      }}>
+                {/* Center: Discount badge */}
+                <div style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '2px solid rgba(255,255,255,0.5)',
+                    borderRadius: 50,
+                    padding: '4px 20px',
+                    fontWeight: 900,
+                    fontSize: 20,
+                    letterSpacing: 1,
+                    backdropFilter: 'blur(4px)',
+                    animation: 'flashPulse 2s ease-in-out infinite',
+                }}>
+                    {flashSale.discount}% OFF
+                </div>
 
-        {/* Left: Emoji + Message */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 26, animation: 'flashPulse 0.8s ease-in-out infinite' }}>⚡</span>
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 16, letterSpacing: '.3px', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
-            {flashSale.message}
-          </span>
-        </div>
+                {/* Right: Code + Close */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <button onClick={copyCode} style={{
+                        background: 'rgba(255,255,255,0.2)',
+                        border: '2px dashed rgba(255,255,255,0.7)',
+                        color: 'white',
+                        padding: '6px 16px',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        fontWeight: 800,
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        transition: 'all 0.2s',
+                        backdropFilter: 'blur(4px)',
+                    }}>
+                        {copied ? '✅ Copied!' : `🏷️ ${flashSale.code}`}
+                    </button>
 
-        {/* Center: Promo Code (click to copy) */}
-        <button
-          onClick={copyCode}
-          title="Click to copy code"
-          style={{
-            background: copied ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)',
-            border: '2px dashed rgba(255,255,255,0.8)',
-            borderRadius: 10,
-            padding: '6px 18px',
-            cursor: 'pointer',
-            color: '#fff',
-            fontWeight: 900,
-            fontSize: 18,
-            fontFamily: 'monospace',
-            letterSpacing: 3,
-            transition: 'all 0.2s',
-            transform: copied ? 'scale(0.96)' : 'scale(1)',
-          }}
-        >
-          {copied ? '✓ Copied!' : flashSale.code}
-        </button>
-
-        {/* Right: Countdown */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: 600 }}>Ends in:</span>
-          <span style={{
-            background: 'rgba(0,0,0,0.3)',
-            color: '#fff',
-            fontWeight: 900,
-            fontSize: 22,
-            fontFamily: 'monospace',
-            padding: '4px 12px',
-            borderRadius: 8,
-            minWidth: 72,
-            textAlign: 'center',
-            textShadow: '0 0 12px rgba(255,255,255,0.6)',
-            letterSpacing: 2,
-          }}>
-            {timeLeft}
-          </span>
-        </div>
-
-        {/* Dismiss button */}
-        <button
-          onClick={dismiss}
-          style={{
-            position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-            background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
-            width: 28, height: 28, cursor: 'pointer', color: '#fff', fontSize: 16,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.4)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-        >✕</button>
-      </div>
-
-      <style>{`
-        @keyframes flashGradient {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        @keyframes flashPulse {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          50%       { transform: scale(1.3) rotate(-10deg); }
-        }
-      `}</style>
-    </>
-  );
+                    <button onClick={() => setFlashSale(null)} style={{
+                        background: 'rgba(255,255,255,0.15)',
+                        border: 'none',
+                        color: 'white',
+                        width: 28,
+                        height: 28,
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        fontSize: 16,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                    }}>
+                        ×
+                    </button>
+                </div>
+            </div>
+        </>
+    );
 }

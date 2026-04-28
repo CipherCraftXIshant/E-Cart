@@ -1,5 +1,19 @@
 import { useApp } from '../../context/AppContext';
 
+// Inject livePulse animation once
+const _style = document.createElement('style');
+_style.textContent = `@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }`;
+if (!document.head.querySelector('[data-live-pulse]')) {
+    _style.setAttribute('data-live-pulse', '1');
+    document.head.appendChild(_style);
+}
+
+const getStatusStyle = (status) => {
+    if (status === 'Delivered') return { text: 'Delivered ✅', color: '#16a34a' };
+    if (status === 'In Transit') return { text: 'In Transit 🚚', color: '#f97316' };
+    return { text: 'Processing 🔄', color: '#6366f1' };
+};
+
 export default function OrdersPage({ navigate }) {
     const { orders } = useApp();
 
@@ -23,15 +37,15 @@ export default function OrdersPage({ navigate }) {
     return (
         <main style={{ padding: '60px 24px', minHeight: '70vh' }}>
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
+                {/* Header with 🔴 LIVE badge */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 8 }}>
                     <h1 style={{ fontSize: '2rem', color: 'var(--ch)', margin: 0 }}>My Orders 📦</h1>
-                    {/* Live indicator */}
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 50 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 50 }}>
                         <span style={{ width: 8, height: 8, background: '#dc2626', borderRadius: '50%', display: 'inline-block', animation: 'livePulse 1.2s ease-in-out infinite' }} />
                         LIVE
                     </span>
                 </div>
-                <p style={{ color: 'var(--gm)', marginBottom: 40 }}>Track and manage your orders here. Status updates automatically.</p>
+                <p style={{ color: 'var(--gm)', marginBottom: 40 }}>Status updates automatically — no need to refresh.</p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                     {orders.map(ord => {
@@ -46,22 +60,26 @@ export default function OrdersPage({ navigate }) {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, borderBottom: '1px solid var(--gl)', paddingBottom: 16, marginBottom: 16 }}>
                                     <div>
                                         <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ch)', marginBottom: 4 }}>{ord.id}</div>
-                                        <div style={{ fontSize: 13, color: 'var(--gm)' }}>{new Date(ord.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {ord.items.length} items</div>
+                                        <div style={{ fontSize: 13, color: 'var(--gm)' }}>
+                                            {new Date(ord.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} • {ord.items.length} items
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                         <div style={{ fontWeight: 800, fontSize: 18, color: 'var(--ch)' }}>₹{ord.total.toLocaleString()}</div>
-                                        <span style={{ padding: '6px 16px', borderRadius: 50, fontSize: 13, fontWeight: 700, background: `${status.color}18`, color: status.color }}>{status.text}</span>
+                                        <span style={{ padding: '6px 16px', borderRadius: 50, fontSize: 13, fontWeight: 700, background: `${status.color}18`, color: status.color }}>
+                                            {status.text}
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Shipping & Payment Info */}
+                                {/* Shipping & Payment */}
                                 <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBottom: 20, fontSize: 13, color: 'var(--gm)' }}>
                                     <div style={{ flex: 1, minWidth: 200, background: 'var(--saffron-p)', padding: '12px', borderRadius: 12 }}>
                                         <strong style={{ color: 'var(--ch)', display: 'block', marginBottom: 4 }}>Shipping to:</strong>
-                                        {ord.shipping.name} <br />
-                                        {ord.shipping.address}<br />
-                                        {ord.shipping.city} - {ord.shipping.pin}<br />
-                                        Phone: {ord.shipping.phone}
+                                        {ord.shipping?.name}<br />
+                                        {ord.shipping?.address}<br />
+                                        {ord.shipping?.city} - {ord.shipping?.pin}<br />
+                                        Phone: {ord.shipping?.phone}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 200, background: 'var(--saffron-p)', padding: '12px', borderRadius: 12 }}>
                                         <strong style={{ color: 'var(--ch)', display: 'block', marginBottom: 4 }}>Payment Method:</strong>

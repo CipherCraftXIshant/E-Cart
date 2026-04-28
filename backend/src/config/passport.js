@@ -40,7 +40,6 @@ passport.use(
   )
 );
 
-// We define serialization just in case, though we primarily use JWTs
 passport.serializeUser((user, done) => {
     done(null, user.id);
 });

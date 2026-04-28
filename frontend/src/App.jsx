@@ -3,6 +3,7 @@ import { AppProvider, useApp, API_URL } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Toast from './components/Toast';
+import FlashSaleBanner from './components/FlashSaleBanner';
 import Home from './pages/Home';
 import CategoryPage from './pages/CategoryPage';
 import ProductDetail from './pages/Features/ProductDetail';
@@ -13,7 +14,6 @@ import Wishlist from './pages/Features/Wishlist';
 import SearchResults from './pages/Features/SearchResults';
 import OrdersPage from './pages/Features/OrdersPage';
 import OAuthSuccess from './pages/Features/OAuthSuccess';
-import FlashSaleBanner from './components/FlashSaleBanner';
 import './styles/global.css';
 
 // ── Simple client-side router ──────────────────────────────────────────────
