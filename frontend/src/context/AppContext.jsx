@@ -91,60 +91,13 @@ export function AppProvider({ children }) {
   }, []);
 
   // ── Socket.io real-time connection ──────────────────────────────────
-
-  useEffect(() => {
-    const socket = socketIO('http://localhost:3000', { transports: ['websocket'] });
-    socketRef.current = socket;
-
-    // If an active flash sale exists when connecting, show it immediately
-    socket.on('flashSale:start', (data) => setFlashSale(data));
-    socket.on('flashSale:end', () => setFlashSale(null));
-
-    // Live order status updates — update matching order in state
-    socket.on('order:statusUpdated', ({ orderId, status }) => {
-      setOrders(prev => prev.map(o =>
-        o.id && o.id.endsWith(orderId.toString().slice(-6))
-          ? { ...o, status }
-          : o
-      ));
-    });
-
-    return () => socket.disconnect();
-  }, []);
-
-  // Join user's private socket room after login
-  useEffect(() => {
-    if (user && socketRef.current) {
-      socketRef.current.emit('join', user.id);
-    }
-  }, [user]);
-
-  const login = useCallback((userData, jwtToken) => {
-    setUser(userData);
-    if (jwtToken) setToken(jwtToken);
-    showToast(`Welcome, ${userData.name}! 👋`);
-  }, [showToast]);
-
-  // Socket.io — connect for ALL visitors (flash sales work for everyone)
   useEffect(() => {
     const socket = socketIO('http://localhost:3000', { transports: ['websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {
       console.log('[Socket.io] Connected:', socket.id);
-      // Join private user room only if logged in (for order tracking)
       if (user?.id) socket.emit('join', user.id);
-    });
-
-    // Live Order Tracking: status changed (e.g. Processing → Delivered)
-    socket.on('order:statusUpdated', ({ orderId, status }) => {
-      setOrders(prev => prev.map(o => {
-        if (o.id.includes(orderId.toString().slice(-6))) {
-          return { ...o, status };
-        }
-        return o;
-      }));
-      showToast(`Your order status updated to: ${status} 📦`);
     });
 
     // Flash Sale Announcements: broadcast from admin to ALL users
@@ -156,12 +109,29 @@ export function AppProvider({ children }) {
       setFlashSale(null);
     });
 
+    // Live Order Tracking: status changed (e.g. Processing → Delivered)
+    socket.on('order:statusUpdated', ({ orderId, status }) => {
+      setOrders(prev => prev.map(o => {
+        if (o.id && o.id.includes(orderId.toString().slice(-6))) {
+          return { ...o, status };
+        }
+        return o;
+      }));
+      showToast(`Your order status updated to: ${status} 📦`);
+    });
+
     return () => {
       socket.disconnect();
       socketRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Connect once on mount
+  }, []);
+
+  const login = useCallback((userData, jwtToken) => {
+    setUser(userData);
+    if (jwtToken) setToken(jwtToken);
+    showToast(`Welcome, ${userData.name}! 👋`);
+  }, [showToast]);
 
   // Re-join user room when user logs in
   useEffect(() => {
