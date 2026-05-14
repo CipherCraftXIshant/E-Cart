@@ -39,7 +39,8 @@ router.get(
 
     // Only send user data in URL (no token exposed)
     const userData = { id: req.user._id, name: req.user.name, email: req.user.email, avatar: req.user.avatar };
-    res.redirect(`http://localhost:5173/auth/success?user=${encodeURIComponent(JSON.stringify(userData))}`);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/success?user=${encodeURIComponent(JSON.stringify(userData))}`);
   }
 );
 

@@ -75,7 +75,7 @@ function AppShell() {
 
 // ── Simple placeholder pages ───────────────────────────────────────────────
 function ProfilePage({ navigate }) {
-  const { user, logout, token, updateUser } = useApp();
+  const { user, logout, token, updateUser, showToast } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ name: '' });
   const [uploading, setUploading] = useState(false);
@@ -109,7 +109,8 @@ function ProfilePage({ navigate }) {
     try {
       const res = await fetch(`${API_URL}/upload`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',  // send HttpOnly cookie
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         body: formDataObj
       });
       const data = await res.json();
@@ -138,13 +139,15 @@ function ProfilePage({ navigate }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ name: formData.name, avatar: formData.avatar || user.avatar })
+        body: JSON.stringify({ name: formData.name, avatar: formData.avatar || user.avatar }),
+        credentials: 'include',  // send HttpOnly cookie
       });
       const data = await res.json();
       
       if (res.ok) {
         updateUser({ name: data.user.name, avatar: data.user.avatar });
         setIsEditing(false);
+        showToast('Profile updated successfully! ✨');
       } else {
         setError(data.message || 'Failed to update profile');
       }

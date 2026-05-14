@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 
 export default function Cart({ navigate }) {
-  const { cart, removeFromCart, updateCartQty, cartTotal, clearCart, user, showToast, placeOrder } = useApp();
+  const { cart, removeFromCart, updateCartQty, cartTotal, clearCart, user, showToast, placeOrder, flashSale } = useApp();
   const [coupon, setCoupon] = useState('');
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState('');
@@ -13,10 +13,21 @@ export default function Cart({ navigate }) {
   const [payment, setPayment] = useState('UPI');
 
   const applyCoupon = () => {
-    const codes = { 'ECART10': 0.10, 'SAVE20': 0.20, 'FIRST50': 0.50 };
-    if (codes[coupon.toUpperCase()]) {
-      setDiscount(codes[coupon.toUpperCase()]);
-      setCouponMsg(`✅ Coupon applied! ${coupon.toUpperCase()} — ${(codes[coupon.toUpperCase()] * 100)}% off`);
+    const staticCodes = { 'ECART10': 0.10, 'SAVE20': 0.20, 'FIRST50': 0.50 };
+    const upperCode = coupon.trim().toUpperCase();
+
+    // Check if the entered code matches the live flash sale from socket.io
+    if (flashSale && upperCode === flashSale.code.toUpperCase()) {
+      const flashDiscount = flashSale.discount / 100;
+      setDiscount(flashDiscount);
+      setCouponMsg(`✅ Flash Sale applied! ${upperCode} — ${flashSale.discount}% off`);
+      return;
+    }
+
+    // Check static coupon codes
+    if (staticCodes[upperCode]) {
+      setDiscount(staticCodes[upperCode]);
+      setCouponMsg(`✅ Coupon applied! ${upperCode} — ${(staticCodes[upperCode] * 100)}% off`);
     } else {
       setCouponMsg('❌ Invalid coupon code');
       setDiscount(0);
@@ -34,6 +45,14 @@ export default function Cart({ navigate }) {
     else if (step === 2) {
       if (!shipping.name || !shipping.address || !shipping.city || !shipping.pin || !shipping.phone) {
         showToast('Please fill all shipping details', '⚠️');
+        return;
+      }
+      if (!/^\d{10}$/.test(shipping.phone)) {
+        showToast('Phone number must be exactly 10 digits', '⚠️');
+        return;
+      }
+      if (!/^\d{6}$/.test(shipping.pin)) {
+        showToast('PIN code must be exactly 6 digits', '⚠️');
         return;
       }
       setStep(3);
@@ -126,11 +145,11 @@ export default function Cart({ navigate }) {
                 <h3 style={{ fontSize: 18, marginBottom: 20 }}>Delivery Address</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <input className="inp" placeholder="Full Name" value={shipping.name} onChange={e => setShipping({ ...shipping, name: e.target.value })} />
-                  <input className="inp" placeholder="Phone Number" type="tel" value={shipping.phone} onChange={e => setShipping({ ...shipping, phone: e.target.value })} />
+                  <input className="inp" placeholder="Phone Number (10 digits)" type="tel" inputMode="numeric" maxLength={10} value={shipping.phone} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 10); setShipping({ ...shipping, phone: v }); }} />
                   <textarea className="inp" placeholder="Street Address / Apartment / Suite" rows="3" style={{ resize: 'vertical' }} value={shipping.address} onChange={e => setShipping({ ...shipping, address: e.target.value })} />
                   <div style={{ display: 'flex', gap: 16 }}>
                     <input className="inp" placeholder="City" style={{ flex: 1 }} value={shipping.city} onChange={e => setShipping({ ...shipping, city: e.target.value })} />
-                    <input className="inp" placeholder="PIN Code" style={{ width: 140 }} value={shipping.pin} onChange={e => setShipping({ ...shipping, pin: e.target.value })} />
+                    <input className="inp" placeholder="PIN Code (6 digits)" style={{ width: 140 }} inputMode="numeric" maxLength={6} value={shipping.pin} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setShipping({ ...shipping, pin: v }); }} />
                   </div>
                 </div>
               </div>

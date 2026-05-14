@@ -3,7 +3,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { io as socketIO } from 'socket.io-client';
 
 const AppContext = createContext(null);
-export const API_URL = "http://localhost:3000/api";
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ecart_user')) || null);
@@ -92,7 +93,7 @@ export function AppProvider({ children }) {
 
   // ── Socket.io real-time connection ──────────────────────────────────
   useEffect(() => {
-    const socket = socketIO('http://localhost:3000', { transports: ['websocket'] });
+    const socket = socketIO(SOCKET_URL, { transports: ['websocket'] });
     socketRef.current = socket;
 
     socket.on('connect', () => {

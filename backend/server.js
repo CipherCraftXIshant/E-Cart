@@ -3,11 +3,12 @@ const http = require('http');
 const app = require('./src/app');
 const connectDB = require('./src/config/db');
 const socketManager = require('./src/socket');
+const autoSeedProducts = require('./src/seedData');
 
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB Atlas
-connectDB();
+// Connect to MongoDB then auto-seed products if DB is empty
+connectDB().then(() => autoSeedProducts());
 
 // Create HTTP server and attach socket.io
 const httpServer = http.createServer(app);
