@@ -17,10 +17,10 @@ export default function Footer({ navigate }) {
           </div>
           <p style={{ fontSize:13, color:'var(--gm)', fontWeight:600, marginBottom:16 }}>World's Most Trusted Shopping Platform</p>
           <div style={{ fontSize:13, color:'var(--gm)', lineHeight:2.1 }}>
-            <div>📍 Dubai Digital Park, Dubai Silicon Oasis, UAE</div>
-            <div>📍 62 Tulsi Estate, Ahmedabad, Gujarat — 382213</div>
-            <div>📞 (+91) 89991 20020</div>
-            <div>✉️ care@ecart.com</div>
+            <div>📍 Yamunanagar, Haryana — 135001</div>
+            <div>📍 Chandigarh — 160017 </div>
+            <div>📞 (+91) 9306909499</div>
+            <div>✉️ ishant4641@gmail.com</div>
           </div>
         </div>
 
@@ -54,7 +54,7 @@ export default function Footer({ navigate }) {
         </div>
       </div>
       <div style={{ background:'#92400e', padding:'10px 24px', textAlign:'center', fontSize:13, color:'#fef3c7', fontWeight:600 }}>
-        🎁 e-cart Rewards | Get up to 10% Off using POPCoins →
+        Website built and deployed by Ishant Sharma with ❤️ <a href="https://github.com/ISHANT4641">GitHub</a>
       </div>
 
       <style>{`@media(max-width:768px){ .footer-grid{ grid-template-columns:1fr !important; } }`}</style>
