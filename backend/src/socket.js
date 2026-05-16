@@ -7,13 +7,22 @@ module.exports = {
         const { Server } = require('socket.io');
         io = new Server(httpServer, {
             cors: {
-                origin: [
-                    'http://localhost:5173',
-                    'http://localhost:5174',
-                    'http://localhost:5175',
-                    'http://localhost:3000',
-                    process.env.FRONTEND_URL,
-                ].filter(Boolean),
+                origin: (origin, callback) => {
+                    const allowed = [
+                        'http://localhost:5173',
+                        'http://localhost:5174',
+                        'http://localhost:5175',
+                        'http://localhost:3000',
+                        process.env.FRONTEND_URL,
+                    ].filter(Boolean);
+                    const isVercel = origin && origin.endsWith('.vercel.app');
+                    if (!origin || allowed.includes(origin) || isVercel) {
+                        callback(null, true);
+                    } else {
+                        callback(new Error('Not allowed by CORS'));
+                    }
+                },
+
                 methods: ['GET', 'POST'],
                 credentials: true
             }

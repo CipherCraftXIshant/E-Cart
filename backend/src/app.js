@@ -12,14 +12,26 @@ const app = express();
 
 // Middlewares
 app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5175',
-        process.env.FRONTEND_URL,  // set this in production .env
-    ].filter(Boolean),
+    origin: (origin, callback) => {
+        const allowed = [
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://localhost:5175',
+            process.env.FRONTEND_URL,
+        ].filter(Boolean);
+
+        // Allow any vercel.app subdomain (covers branch/preview/production deployments)
+        const isVercel = origin && origin.endsWith('.vercel.app');
+
+        if (!origin || allowed.includes(origin) || isVercel) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
+
 app.use(express.json());
 app.use(cookieParser()); // Parse cookies from every request
 
