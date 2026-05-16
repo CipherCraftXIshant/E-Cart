@@ -29,11 +29,12 @@ router.get(
       { expiresIn: "7d" }
     );
 
-    // Set JWT inside HttpOnly cookie
+    // Set JWT inside HttpOnly cookie — secure:true required for HTTPS in production
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('ecart_token', token, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProduction,           // true on HTTPS (Render), false on localhost
+      sameSite: isProduction ? 'none' : 'lax',  // 'none' required for cross-origin on HTTPS
       maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
     });
 

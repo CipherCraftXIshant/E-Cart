@@ -34,10 +34,11 @@ exports.signup = async (req, res) => {
         );
 
         // Store JWT in HttpOnly cookie (JS cannot read this)
+        const isProduction = process.env.NODE_ENV === 'production';
         res.cookie('ecart_token', token, {
             httpOnly: true,
-            secure: false,       // set to true in production (HTTPS)
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000  // 1 day
         });
 
@@ -81,10 +82,11 @@ exports.login = async (req, res) => {
         );
 
         // Store JWT in HttpOnly cookie (JS cannot read this)
+        const isProduction = process.env.NODE_ENV === 'production';
         res.cookie('ecart_token', token, {
             httpOnly: true,
-            secure: false,       // set to true in production (HTTPS)
-            sameSite: 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 24 * 60 * 60 * 1000  // 1 day
         });
 
