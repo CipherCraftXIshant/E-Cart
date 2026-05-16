@@ -63,7 +63,7 @@ function AppShell() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <FlashSaleBanner />
-      <Navbar navigate={navigate} currentPage={page.route} />
+      <Navbar navigate={navigate} currentRoute={page.route} />
       <div style={{ flex: 1 }}>
         {renderPage()}
       </div>
