@@ -129,9 +129,14 @@ export function AppProvider({ children }) {
   }, []);
 
   const login = useCallback((userData, jwtToken) => {
-    setUser(userData);
+    // Normalize: always ensure user has 'id' as a string (email/password login returns '_id', Google OAuth returns 'id')
+    const normalizedUser = {
+      ...userData,
+      id: userData.id || userData._id?.toString() || userData._id,
+    };
+    setUser(normalizedUser);
     if (jwtToken) setToken(jwtToken);
-    showToast(`Welcome, ${userData.name}! 👋`);
+    showToast(`Welcome, ${normalizedUser.name}! 👋`);
   }, [showToast]);
 
   // Re-join user room when user logs in
