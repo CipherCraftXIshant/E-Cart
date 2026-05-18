@@ -38,10 +38,11 @@ router.get(
       maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
     });
 
-    // Only send user data in URL (no token exposed)
+    // Send user data AND token in URL so frontend can store token in localStorage
+    // (needed for cross-origin API calls where cookie may not be sent)
     const userData = { id: req.user._id, name: req.user.name, email: req.user.email, avatar: req.user.avatar };
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/auth/success?user=${encodeURIComponent(JSON.stringify(userData))}`);
+    res.redirect(`${frontendUrl}/auth/success?user=${encodeURIComponent(JSON.stringify(userData))}&token=${token}`);
   }
 );
 

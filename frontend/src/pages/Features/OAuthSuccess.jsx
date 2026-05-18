@@ -13,7 +13,8 @@ export default function OAuthSuccess({ navigate }) {
     if (userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
-        login(user);  // no token needed — cookie is sent automatically
+        const token = params.get("token");  // extract JWT token too
+        login(user, token);  // pass token so it's stored in localStorage
         window.history.replaceState(null, '', '/');
         navigate("/");
       } catch (err) {

@@ -55,7 +55,9 @@ export function AppProvider({ children }) {
 
         // Fetch Orders
         const resOrders = await fetch(`${API_URL}/orders/${user.id}`, opts);
-        if (resOrders.status === 401) return logout();
+        // Only logout if we have a token that the server rejected (genuinely expired)
+        // Not if we simply have no token — that's a different problem
+        if (resOrders.status === 401 && token) return logout();
 
         if (resOrders.ok) {
           const data = await resOrders.json();
